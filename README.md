@@ -344,5 +344,42 @@ Lalu pada file ``/etc/sysctl.conf`` lakukan uncommented pada ``net.ipv4.ip_forwa
 
 Terakhir jangan lupa untuk restart seluruh client agar dapat melakukan leasing IP dari DHCP Server
   
+## No. 5
+>Lama waktu DHCP server meminjamkan alamat IP kepada Client yang melalui Switch3 selama 3 menit sedangkan pada client yang melalui Switch4 selama 12 menit. Dengan waktu maksimal dialokasikan untuk peminjaman alamat IP selama 96 menit
+
+Untuk mengatur leasing time pada switch3 dan switch4 sesuai dengan aturan soal, kita perlu menambahkan beberapa konfigurasi pada `DHCP Server` di file `.bashrc` menjadi seperti berikut.
+
+  ```sh
+  echo 'subnet 192.203.1.0 netmask 255.255.255.0 {
+  }
+
+  subnet 192.203.2.0 netmask 255.255.255.0 {
+  }
+
+  subnet 192.203.3.0 netmask 255.255.255.0 {
+      range 192.203.3.16 192.203.3.32;
+      range 192.203.3.64 192.203.3.80;
+      option routers 192.203.3.0;
+      option broadcast-address 192.203.3.255;
+      option domain-name-servers 192.203.1.2;
+      default-lease-time 180;
+      max-lease-time 5760;
+  }
+
+  subnet 192.203.4.0 netmask 255.255.255.0 {
+      range 192.203.4.12 192.203.4.20;
+      range 192.203.4.160 192.203.4.168;
+      option routers 192.203.4.0;
+      option broadcast-address 192.203.4.255;
+      option domain-name-servers 192.203.1.2;
+      default-lease-time 720;
+      max-lease-time 5760;
+  }
+
+  service isc-dhcp-server restart
+  ```
+
+
+
 
 
