@@ -244,3 +244,8 @@ selanjutnya melakukan setup untuk node `DNS Server` sebagai berikut
   ```
 kita bisa melihat hasilnya dengan melakukan perintah `ping riegel.canyon.d24.com` dan `ping granz.channel.d24.com` pada salah satu node `client`, kali ini kita meenggunakan node `Richter`. Pastikan node Lugner dan Fern telah berjalan.
 
+<img src="assets/no1-1.png" alt="">
+<img src="assets/no1-2.png" alt="">
+
+## No. 2
+
