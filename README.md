@@ -10,6 +10,7 @@ Kelompok D24.
 
 # Laporan Revisi
 ## No. 1
+Perjalanan selanjutnya akan menggunakan peta berikut:
 <img src="assets/konfig.jpg" alt="">
 Setelah membuat topologi seperti pada gambar diatas, selanjutnya kita perlu menyeting konfigurasi untuk setup awal pada setiap node sebagai berikut.
 
@@ -248,4 +249,100 @@ kita bisa melihat hasilnya dengan melakukan perintah `ping riegel.canyon.d24.com
 <img src="assets/no1-2.png" alt="">
 
 ## No. 2
+>Semua CLIENT harus menggunakan konfigurasi dari DHCP Server.
+
+Untuk melakukan hal tersebut pertama-tama kita perlu menyeting `DNS Server` terlebih dahulu dengan menuliskan perintah
+  ```sh
+  apt-get update
+  apt install isc-dhcp-server -y
+  ```
+Kemudian merubah konfigurasi untuk node-node `client` sebagai berikut
+  ```sh
+  auto eth0
+  iface eth0 inet dhcp
+  ```
+>Client yang melalui Switch3 mendapatkan range IP dari [prefix IP].3.16 - [prefix IP].3.32 dan [prefix IP].3.64 - [prefix IP].3.80
+
+Selanjutnya pada node `DNS Server` kita perlu menambahkan perintah dibawah ini pada file `.bashrc`
+  ```sh
+  echo 'subnet 192.203.1.0 netmask 255.255.255.0 {
+  }
+
+  subnet 192.203.2.0 netmask 255.255.255.0 {
+  }
+
+  subnet 192.203.3.0 netmask 255.255.255.0 {
+      range 192.203.3.16 192.203.3.32;
+      range 192.203.3.64 192.203.3.80;
+      option routers 192.203.3.0;
+  }' > /etc/dhcp/dhcpd.conf
+  ```
+
+## No. 3
+>Client yang melalui Switch4 mendapatkan range IP dari [prefix IP].4.12 - [prefix IP].4.20 dan [prefix IP].4.160 - [prefix IP].4.168
+Pada node `DNS Server` kita perlu menambahkan perintah dibawah ini pada file `.bashrc`
+  ```sh 
+  subnet 192.203.4.0 netmask 255.255.255.0 {
+      range 192.203.4.12 192.203.4.20;
+      range 192.203.4.160 192.203.4.168;
+      option routers 192.203.4.0;
+  } ' > /etc/dhcp/dhcpd.conf
+  ```
+
+## No. 4
+>Client mendapatkan DNS dari Heiter dan dapat terhubung dengan internet melalui DNS tersebut
+
+sekarang kita akan menambahkan beberapa konfigurasi pada `DNS Server` dengan merubah file `.bashrc` sebagai berikut
+  ```sh
+  echo 'subnet 192.203.1.0 netmask 255.255.255.0 {
+  }
+
+  subnet 192.203.2.0 netmask 255.255.255.0 {
+  }
+
+  subnet 192.203.3.0 netmask 255.255.255.0 {
+      range 192.203.3.16 192.203.3.32;
+      range 192.203.3.64 192.203.3.80;
+      option routers 192.203.3.0;
+      option broadcast-address 192.203.3.255;
+      option domain-name-servers 192.203.1.2; 
+  }
+
+  subnet 192.203.4.0 netmask 255.255.255.0 {
+      range 192.203.4.12 192.203.4.20;
+      range 192.203.4.160 192.203.4.168;
+      option routers 192.203.4.0;
+      option broadcast-address 192.203.4.255;
+      option domain-name-servers 192.203.1.2;
+  } ' > /etc/dhcp/dhcpd.conf
+
+  service isc-dhcp-server start
+  ```
+Kemudia pada node `DHCP Relay` kita perlu manambahkan perintah berikut
+  ```sh
+  echo '# Defaults for isc-dhcp-relay initscript
+  # sourced by /etc/init.d/isc-dhcp-relay
+  # installed at /etc/default/isc-dhcp-relay by the maintainer scripts
+
+  #
+  # This is a POSIX shell fragment
+  #
+
+  # What servers should the DHCP relay forward requests to?
+  SERVERS="192.203.1.1"
+
+  # On what interfaces should the DHCP relay (dhrelay) serve DHCP requests?
+  INTERFACES="eth1 eth2 eth3 eth4"
+
+  # Additional options that are passed to the DHCP relay daemon?
+  OPTIONS=""' > /etc/default/isc-dhcp-relay
+
+  service isc-dhcp-relay start
+  ```
+
+Lalu pada file ``/etc/sysctl.conf`` lakukan uncommented pada ``net.ipv4.ip_forward=1``
+
+Terakhir jangan lupa untuk restart seluruh client agar dapat melakukan leasing IP dari DHCP Server
+  
+
 
